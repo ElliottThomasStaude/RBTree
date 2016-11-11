@@ -1,5 +1,7 @@
 <?php
 
+// External definitions: RED = 0, BLACK = 1
+
 class RBTreeNode {
 	// Default color is red
 	private $nodeColor = RED;
@@ -10,9 +12,36 @@ class RBTreeNode {
 
 	private $nodeContent = false;
 
-	public function __construct($nodeContent) {
+	public function __construct($nodeContent, $leafNode=false) {
+		$this->nodeContent = $nodeContent;
+		if ($leafNode === false) {
+			$leftChild = new RBTreeNode(false, true);
+			$leftChild->setNodeColor(BLACK);
+			$rightChild = new RBTreeNode(false, true);
+			$rightChild->setNodeColor(BLACK);
+			$this->leftChildNode = &$leftChild;
+			$this->rightChildNode = &$rightChild;
+		}
+	}
+
+
+	public function nodeIsLeaf() {
+		$leftChildIsMissing = ($this->leftChildNode === false);
+		$rightChildIsMissing = ($this->rightChildNode === false);
+		$currentNodeIsEmpty = ($this->getNodeContent() === false);
+		$isLeafNode = ($leftChildIsMissing && $rightChildIsMissing && $currentNodeIsEmpty);
+		return $isLeafNode;
+	}
+
+
+	public function setNodeContent($nodeContent) {
 		$this->nodeContent = $nodeContent;
 	}
+
+	public function getNodeContent() {
+		return $this->nodeContent;
+	}
+
 
 	public function setNodeColor($color) {
 		$this->nodeColor = $color;
@@ -33,20 +62,20 @@ class RBTreeNode {
 
 	public function getGrandparentNode() {
 		$grandparent = false;
-		$parent = $this->getParentNode();
+		$parent = &$this->getParentNode();
 		if ($parent !== false) {
-			$grandparent = $parent->getParentNode();
+			$grandparent = &$parent->getParentNode();
 		}
 		return $grandparent;
 	}
 
 	public function getUncleNode() {
 		$uncle = false;
-		$parent = &$this->getParentNode();
 		$grandparent = &$this->getGrandparentNode();
 		if ($grandparent !== false) {
-			$uncle = $grandparent->leftChildNode;
-			$right = $grandparent->rightChildNode;
+			$parent = &$this->getParentNode();
+			$uncle = &$grandparent->leftChildNode;
+			$right = &$grandparent->rightChildNode;
 			if ($uncle === $parent) {
 				$uncle = $right;
 			}
@@ -64,7 +93,26 @@ class RBTreeNode {
 	}
 
 
-	public function getNodeContent() {
-		return $this->nodeContent;
+	public function getPredecessorChildNode(&$startingNode) {
+		$predecessor = false;
+		if ($startingNode->nodeIsLeaf() === false) {
+			$predecessor = &$startingNode->leftChildNode;
+			while ($predecessor->rightChildNode->nodeIsLeaf() === false) {
+				$predecessor = &$predecessor->rightChildNode;
+			}
+		}
+		return $predecessor;
+	}
+
+
+	public function getSuccessorChildNode(&$startingNode) {
+		$successor = false;
+		if ($startingNode->nodeIsLeaf() === false) {
+			$successor = &$startingNode->rightChildNode;
+			while ($successor->leftChildNode->nodeIsLeaf() === false) {
+				$successor = &$successor->leftChildNode;
+			}
+		}
+		return $successor;
 	}
 }

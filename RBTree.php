@@ -15,22 +15,25 @@ const BLACK = 1;
 // 2 public operations need to be supported: addition of nodes and deletion of nodes
 class RBTree {
 	// Instantiate new object peripherals
-	private $rootNode = false;
+	public $rootNode = false;
 
 	public function __construct() {
 	}
 
 	public function insertNode(&$rootNode, &$node, &$parentNode) {
-		if ($rootNode === false) {
+		_::echoPlusPlus("rootNode:", $node);
+		if ($rootNode !== false) {
+			$isleaf = $rootNode->nodeIsLeaf();
+			_::echoPlusPlus("rootNodeIsLeaf:", $isleaf);
+		}
+		if ($rootNode === false || $rootNode->nodeIsLeaf() !== false) {
 			// There is no root node for the subtree yet; this is where the insert happens
-			_::echoPlusPlus("root");
 			$node->setParentNode($parentNode);
 			
 			$rootNode = $node;
 			$this->basicInsertion($node);
 		} else {
 			// This node must be part of one of this node's subtrees
-			_::echoPlusPlus("notroot");
 			$parent = $rootNode;
 			$n = $node;
 			$content = $node->getNodeContent();
@@ -130,9 +133,101 @@ class RBTree {
 		$this->insertNode($this->rootNode, $node, $parent);
 	}
 
-
-	public function removeNode() {
-		
+	public function removeNodeWithContent($nodeContent) {
+		$rootNode = &$this->rootNode;
+		if ($rootNode !== false) {
+			$speculativeNode = &$rootNode;
+			while ($speculativeNode->nodeIsLeaf() === false) {
+				$content = $speculativeNode->getNodeContent;
+				if ($content == $nodeContent) {
+					// If content matches the deletion content, delete node
+					$this->removeNode($speculativeNode);
+				} elseif ($content < $nodeContent) {
+					// If content is less than the deletion content, go down right subtree
+					$speculativeNode = &$speculativeNode->rightChildNode;
+				} else {
+					// If content is more than the deletion content, go down left subtree
+					$speculativeNode = &$speculativeNode->leftChildNode;
+				}
+			}
+		}
 	}
 
+	public function removeNode(&$node) {
+		// Find if node has two, one, or no non-leaf children
+		$numberOfNonleafNodeChildren = 0;
+		if ($node->leftChildNode !== false && $node->leftChildNode->nodeIsLeaf() === false) {
+			$numberOfNonleafNodeChildren++;
+		}
+		if ($node->rightChildNode !== false && $node->rightChildNode->nodeIsLeaf() === false) {
+			$numberOfNonleafNodeChildren++;
+		}
+
+
+		if ($numberOfNonleafNodeChildren === 0) {
+			// Remove node, by setting parent's child on this side to a leaf node
+			$newParentChild = new RBTreeNode(false, true);
+			$newParentChild->setNodeColor(BLACK);
+			$parent = &$node->getParentNode();
+			$parentChild = &$parent->leftChildNode;
+			if ($node !== $parentChild) {
+				$parentChild = &$parent->rightChildNode;
+			}
+			$parentChild = &$newParentChild;
+		} elseif ($numberOfNonleafNodeChildren === 1) {
+			// A complex case
+			// TODO
+		} else {
+			// Pick a side based on the height of left/right subtrees, and subsequently choose and remove the successor/predecessor node as appropriate
+			$leftSubtreeSize = $this->getLeftSubtreeSize($node);
+			$rightSubtreeSize = $this->getRightSubtreeSize($node);
+			$descendantNode = false;
+			if ($rightSubtreeSize > $leftSubtreeSize) {
+				$descendantNode = &$node->getSuccessorChildNode();
+			} else {
+				$descendantNode = &$node->getPredecessorChildNode();
+			}
+			$node->setNodeContent($descendantNode->getNodeContent());
+			$this->removeNode($descendantNode);
+		}
+		return false;
+	}
+
+
+	// This is a function which introduces significant potential runtime to tree operations, but will suffice for goals such as determining which extreme child should replace a deleted node
+	public function getImproperSubtreeSize(&$node) {
+		$size = 0;
+		if ($node !== false) {
+			$size = 1;
+			if ($node->nodeIsLeaf() === false) {
+				// Add the value of the left subtree
+				if ($node->leftChildNode->nodeIsLeaf() === false) {
+					$size += $this->getImproperSubtreeSize($node->leftChildNode);
+				}
+				// Add the value of the right subtree
+				if ($node->rightChildNode->nodeIsLeaf() === false) {
+					$size += $this->getImproperSubtreeSize($node->rightChildNode);
+				}
+			}
+		}
+		return $size;
+	}
+
+	// Simple wrapper for getting the left-side subtree size of a given node
+	public function getLeftSubtreeSize(&$node) {
+		$size = 0;
+		if ($node->leftChildNode->nodeIsLeaf() === false) {
+			$size += $this->getImproperSubtreeSize($node->leftChildNode);
+		}
+		return $size;
+	}
+
+	// Simple wrapper for getting the right-side subtree size of a given node
+	public function getRightSubtreeSize(&$node) {
+		$size = 0;
+		if ($node->rightChildNode->nodeIsLeaf() === false) {
+			$size += $this->getImproperSubtreeSize($node->rightChildNode);
+		}
+		return $size;
+	}
 }
