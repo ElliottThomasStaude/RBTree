@@ -56,24 +56,24 @@ class RBTreeNode {
 		$this->parentNode = $parentNode;
 	}
 
-	public function getParentNode() {
+	public function &getParentNode() {
 		return $this->parentNode;
 	}
 
-	public function getGrandparentNode() {
+	public function &getGrandparentNode() {
 		$grandparent = false;
-		$parent = &$this->getParentNode();
+		$parent = $this->getParentNode();
 		if ($parent !== false) {
-			$grandparent = &$parent->getParentNode();
+			$grandparent = $parent->getParentNode();
 		}
 		return $grandparent;
 	}
 
-	public function getUncleNode() {
+	public function &getUncleNode() {
 		$uncle = false;
-		$grandparent = &$this->getGrandparentNode();
+		$grandparent = $this->getGrandparentNode();
 		if ($grandparent !== false) {
-			$parent = &$this->getParentNode();
+			$parent = $this->getParentNode();
 			$uncle = &$grandparent->leftChildNode;
 			$right = &$grandparent->rightChildNode;
 			if ($uncle === $parent) {
@@ -83,8 +83,8 @@ class RBTreeNode {
 		return $uncle;
 	}
 
-	public function getSiblingNode() {
-		$parent = &$this->parentNode();
+	public function &getSiblingNode() {
+		$parent = $this->parentNode();
 		$sibling = &$parent->leftChildNode;
 		if ($sibling === $this) {
 			$sibling = &$parent->rightChildNode;
@@ -93,7 +93,7 @@ class RBTreeNode {
 	}
 
 
-	public function getPredecessorChildNode(&$startingNode) {
+	public function &getPredecessorChildNode(&$startingNode) {
 		$predecessor = false;
 		if ($startingNode->nodeIsLeaf() === false) {
 			$predecessor = &$startingNode->leftChildNode;
@@ -105,7 +105,7 @@ class RBTreeNode {
 	}
 
 
-	public function getSuccessorChildNode(&$startingNode) {
+	public function &getSuccessorChildNode(&$startingNode) {
 		$successor = false;
 		if ($startingNode->nodeIsLeaf() === false) {
 			$successor = &$startingNode->rightChildNode;

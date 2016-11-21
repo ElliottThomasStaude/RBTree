@@ -138,7 +138,7 @@ class RBTree {
 		if ($rootNode !== false) {
 			$speculativeNode = &$rootNode;
 			while ($speculativeNode->nodeIsLeaf() === false) {
-				$content = $speculativeNode->getNodeContent;
+				$content = $speculativeNode->getNodeContent();
 				if ($content == $nodeContent) {
 					// If content matches the deletion content, delete node
 					$this->removeNode($speculativeNode);
